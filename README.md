@@ -18,13 +18,13 @@ Installation
 munin           4949/tcp        lrrd            # Munin
 ```
 
-4. Add the following to ```/opt/etc/xinetd.conf```:
+4\. Add the following to ```/opt/etc/xinetd.conf```:
 
 ```
 munin   stream  tcp     nowait  root    /opt/local/munin/munin-node
 ```
 
-5. Create ```/opt/etc/xinetd.d/munin```:
+5\. Create ```/opt/etc/xinetd.d/munin```:
 
 ```
 service munin
@@ -39,9 +39,9 @@ service munin
         disable         = no
 }
 ```
-6. Restart xinetd (```killall xinetd && /opt/sbin/xinetd```)
+6\. Restart xinetd (```killall xinetd && /opt/sbin/xinetd```)
 
-7. Configure a Munin-Machine to gather data from the QNAP-Device (as you would with any munin-node-Client).
+7\. Configure a Munin-Machine to gather data from the QNAP-Device (as you would with any munin-node-Client).
 
 Troubleshooting
 ===============
