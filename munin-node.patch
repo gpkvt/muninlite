@@ -1,0 +1,226 @@
+# munin-node.patch
+
+*** munin-node  2013-01-21 11:03:00.000000000 +0100
+--- /opt/local/munin/munin-node 2013-01-21 11:01:26.759985243 +0100
+***************
+*** 21,27 ****
+  PLUGINPATTERN=$(dirname $0)"/munin-node-plugin.d/*"
+
+  # Remove unwanted plugins from this list
+! PLUGINS="df cpu if_ if_err_ load memory processes swap netstat uptime interrupts irqstats ntpdate plugindir_"
+  # ===== LIB FUNCTIONS =====
+  clean_fieldname() {
+    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g'
+--- 21,27 ----
+  PLUGINPATTERN=$(dirname $0)"/munin-node-plugin.d/*"
+
+  # Remove unwanted plugins from this list
+! PLUGINS="df cpu if_ if_err_ users load memory processes swap uptime ipmi_temp hdd_temp plugindir_"
+  # ===== LIB FUNCTIONS =====
+  clean_fieldname() {
+    echo "$@" | sed -e 's/^[^A-Za-z_]/_/' -e 's/[^A-Za-z0-9_]/_/g'
+***************
+*** 30,43 ****
+  # ===== PLUGINS CODE =====
+
+  config_df() {
+!   echo "graph_title Filesystem usage (in %)
+  graph_args --upper-limit 100 -l 0
+  graph_vlabel %
+  graph_category disk
+  graph_info This graph shows disk usage on the machine."
+!   for PART in $(df -P | grep '^/' | sed '/\/[a-z0-9]*$/!d;s/.* \([a-z0-9\/]\{1,\}\)$/\1/g')
+    do
+!     PINFO=$(df -P $PART | tail -1);
+      PNAME=$(echo $PINFO | cut -d\  -f1 | sed 's/\//_/g')
+      echo "$PNAME.label $PART"
+      echo "$PNAME.info $PNAME -> $PART"
+--- 30,43 ----
+  # ===== PLUGINS CODE =====
+
+  config_df() {
+!   echo "graph_title Disk usage in percent
+  graph_args --upper-limit 100 -l 0
+  graph_vlabel %
+  graph_category disk
+  graph_info This graph shows disk usage on the machine."
+!   for PART in $(df | grep '^/' | awk '{print $6}' | sed 1d)
+    do
+!     PINFO=$(df $PART | tail -1);
+      PNAME=$(echo $PINFO | cut -d\  -f1 | sed 's/\//_/g')
+      echo "$PNAME.label $PART"
+      echo "$PNAME.info $PNAME -> $PART"
+***************
+*** 46,54 ****
+    done
+  }
+  fetch_df() {
+!   for PART in $(df -P | grep '^/' | sed '/\/[a-z0-9]*$/!d;s/.* \([a-z0-9\/]\{1,\}\)$/\1/g')
+    do
+!     PINFO=$(df -P $PART | tail -1);
+      PNAME=$(echo $PINFO | cut -d\  -f1 | sed 's/[\/.-]/_/g')
+      echo "$PNAME.value" $(echo $PINFO | cut -f5 -d\  | sed -e 's/\%//g')
+    done
+--- 46,54 ----
+    done
+  }
+  fetch_df() {
+!   for PART in $(df | grep '^/' | awk '{print $6}' | sed 1d)
+    do
+!     PINFO=$(df $PART | tail -1);
+      PNAME=$(echo $PINFO | cut -d\  -f1 | sed 's/[\/.-]/_/g')
+      echo "$PNAME.value" $(echo $PINFO | cut -f5 -d\  | sed -e 's/\%//g')
+    done
+***************
+*** 138,145 ****
+    fi
+  }
+  config_if() {
+    echo "graph_order down up"
+!   echo "graph_title $1 traffic"
+    echo "graph_args --base 1000"
+    echo "graph_vlabel bits in (-) / out (+) per \${graph_period}"
+    echo "graph_category network"
+--- 138,153 ----
+    fi
+  }
+  config_if() {
++
++   if [ $1 == "eth0" ]; then
++     ethname="eth1"
++   fi
++   if [ $1 == "eth1" ]; then
++     ethname="eth2"
++   fi
++
+    echo "graph_order down up"
+!   echo "graph_title $ethname traffic"
+    echo "graph_args --base 1000"
+    echo "graph_vlabel bits in (-) / out (+) per \${graph_period}"
+    echo "graph_category network"
+***************
+*** 166,173 ****
+    echo "up.value" $(echo $IINFO | cut -d\  -f9)
+  }
+  config_if_err() {
+    echo "graph_order rcvd trans"
+!   echo "graph_title $1 errors"
+    echo "graph_args --base 1000"
+    echo "graph_vlabel packets in (-) / out (+) per \${graph_period}"
+    echo "graph_category network"
+--- 174,189 ----
+    echo "up.value" $(echo $IINFO | cut -d\  -f9)
+  }
+  config_if_err() {
++
++   if [ $1 == "eth0" ]; then
++     ethname="eth1"
++   fi
++   if [ $1 == "eth1" ]; then
++     ethname="eth2"
++   fi
++
+    echo "graph_order rcvd trans"
+!   echo "graph_title $ethname errors"
+    echo "graph_args --base 1000"
+    echo "graph_vlabel packets in (-) / out (+) per \${graph_period}"
+    echo "graph_category network"
+***************
+*** 387,393 ****
+    echo "apps.value" $(($APPS * 1024))
+  }
+  config_processes() {
+!   echo "graph_title Number of Processes"
+    echo "graph_args --base 1000 -l 0 "
+    echo "graph_vlabel number of processes"
+    echo "graph_category processes"
+--- 403,409 ----
+    echo "apps.value" $(($APPS * 1024))
+  }
+  config_processes() {
+!   echo "graph_title Processes"
+    echo "graph_args --base 1000 -l 0 "
+    echo "graph_vlabel number of processes"
+    echo "graph_category processes"
+***************
+*** 469,474 ****
+--- 485,491 ----
+  config_uptime() {
+    echo "graph_title Uptime"
+    echo "graph_args --base 1000 -l 0 "
++   echo "graph_category system"
+    echo "graph_vlabel uptime in days"
+    echo "uptime.label uptime"
+    echo "uptime.draw AREA"
+***************
+*** 559,564 ****
+--- 576,644 ----
+    echo "delay.value $DELAY"
+  }
+
++ config_users() {
++     echo "graph_title Logged in users"
++     echo "graph_args --base 1000 -l 0"
++     echo "graph_vlabel Users"
++     echo "graph_scale no"
++     echo "graph_category system"
++     echo "graph_printf %3.0lf"
++     echo "pts.label pts"
++     echo "pts.draw AREASTACK"
++     echo "pts.colour 00FFFF"
++ }
++
++ fetch_users() {
++     pts=$(ps aux | grep pts | wc | awk '{print $1-1}')
++     if [ $pts -lt 0 ]; then
++       pts=0
++     fi
++     echo "pts.value $pts"
++ }
++
++ config_ipmi_temp() {
++     echo "graph_title Machine temperature based on IPMI"
++     echo "graph_vlabel Degrees celcius"
++     echo "graph_category Sensors"
++     echo "SystemTemp.label System Temp"
++     echo "SystemTemp.critical 0:65.000"
++     echo "SystemTemp.warning 0:57.000"
++ }
++
++ fetch_ipmi_temp() {
++     cputemp=$(cat /proc/tsinfo/systemp)
++     echo "SystemTemp.value $cputemp"
++ }
++
++ config_hdd_temp() {
++     echo "graph_title Fan speeds based on IPMI"
++     echo "graph_vlabel Celsius"
++     echo "graph_category Sensors"
++
++     number_of_drives=$(find /sys/block/sd* -name "sd[a-z]" -print | wc -l)
++
++     i=1
++     while [ $i -le $number_of_drives ]
++     do
++       echo "HDD$i.label HDD Temp $i"
++       echo "HDD$i.warning 60"
++       i=`expr $i + 1`
++     done
++ }
++
++ fetch_hdd_temp() {
++
++     number_of_drives=$(find /sys/block/sd* -name "sd[a-z]" -print | wc -l)
++
++     i=1
++     while [ $i -le $number_of_drives ]
++     do
++       hddtemp=$(/sbin/get_hd_temp $i)
++       echo "HDD$i.value $hddtemp"
++       i=`expr $i + 1`
++     done
++ }
++
+  # ===== NODE CODE =====
+  do_list() {
+    echo $PLUGINS
