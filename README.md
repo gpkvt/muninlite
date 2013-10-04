@@ -12,7 +12,7 @@ Installation
 
 2. Install xinetd (```ipkg install xinetd```)
 
-3. Add the following line to /etc/services:
+3. Add the following line to ```/etc/services```:
 
 ```
 munin           4949/tcp        lrrd            # Munin
