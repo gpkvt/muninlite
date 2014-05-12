@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Muninlite : Muninlite for Qnap" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Muninlite</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/gpkvt/muninlite">View on GitHub</a>
+
+          <h1 id="project_title">Muninlite</h1>
+          <h2 id="project_tagline">Muninlite for Qnap</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/gpkvt/muninlite/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/gpkvt/muninlite/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="muninlite" class="anchor" href="#muninlite"><span class="octicon octicon-link"></span></a>muninlite</h1>
+
+<p>Muninlite for Qnap</p>
+
+<p>At the moment there is no IPKG available to install Munin-Node on your QNAP-Device. Fortunately you can use muninlite (<a href="http://sourceforge.net/projects/muninlite/">http://sourceforge.net/projects/muninlite/</a>). Anyway muninlite doesn't support QNAP-Devices very well, so I made some tweaks. You can either use the patch file and get muninlite directly from SourceForge, or you can use the complete Script from this repository. The Script is based on muninlite 1.0.4 (with all plugins enabled) and was tested on a QNAP TS-419 Pro.</p>
+
+<h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<ol>
+<li><p>Copy the Script to <code>/share/MD0_DATA/.qpkg/Optware/local/munin/</code></p></li>
+<li><p>Install xinetd (<code>ipkg install xinetd</code>)</p></li>
+<li><p>Add the following line to <code>/etc/services</code>:</p></li>
+</ol><pre><code>munin           4949/tcp        lrrd            # Munin
+</code></pre>
+
+<p>4. Add the following to <code>/opt/etc/xinetd.conf</code>:</p>
+
+<pre><code>munin   stream  tcp     nowait  root    /opt/local/munin/munin-node
+</code></pre>
+
+<p>5. Create <code>/opt/etc/xinetd.d/munin</code>:</p>
+
+<pre><code>service munin
+{
+        socket_type     = stream
+        protocol        = tcp
+        wait            = no
+        user            = admin
+        group           = administrators
+        #only_from       = 10.42.42.25
+        server          = /opt/local/munin/munin-node
+        disable         = no
+}
+</code></pre>
+
+<p>6. Restart xinetd (<code>killall xinetd &amp;&amp; /opt/sbin/xinetd</code>)</p>
+
+<p>7. Configure a Munin-Machine to gather data from the QNAP-Device (as you would with any munin-node-Client).</p>
+
+<h1>
+<a name="troubleshooting" class="anchor" href="#troubleshooting"><span class="octicon octicon-link"></span></a>Troubleshooting</h1>
+
+<p>Use the xinetd-Debugmode: <code>/opt/sbin/xinetd -d</code></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Muninlite maintained by <a href="https://github.com/gpkvt">gpkvt</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
